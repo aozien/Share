@@ -64,6 +64,7 @@ export default function CadView({
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState()
   const [model, setModel] = useState(null)
+  const [selectedIdsInViewer, setSelectedIdsInViewer] = useState([])
   const isNavPanelOpen = useStore((state) => state.isNavPanelOpen)
   const isDrawerOpen = useStore((state) => state.isDrawerOpen)
   const setCutPlaneDirection = useStore((state) => state.setCutPlaneDirection)
@@ -95,6 +96,26 @@ export default function CadView({
     })()
   }, [viewer])
 
+  // Makes sure the viewer and the selected elements in viewer are in sync
+  useEffect(() => {
+    (async () => {
+      // -- Update Viewer
+      await viewer?.setSelection(0, selectedIdsInViewer)
+      // -- Update Store
+      setSelectedElements(selectedIdsInViewer.map((id) => `${id}`))
+      // -- Update Props
+      if (selectedIdsInViewer.length > 0) {
+        const lastId = selectedIdsInViewer.slice(-1)
+        const props = await viewer.getProperties(0, Number(lastId))
+        setSelectedElement(props)
+        // -- Update Expanded Tree
+        const pathIds = calculatePathIds(lastId)
+        setExpandedElements(pathIds.map((n) => `${n}`))
+      } else {
+        setSelectedElement(null)
+      }
+    })()
+  }, [selectedIdsInViewer, viewer])
 
   // searchParams changes in parent (ShareRoutes) from user and
   // programmatic navigation, and in SearchBar.
@@ -367,28 +388,25 @@ export default function CadView({
    *
    * @param {Array} resultIDs Array of expressIDs
    */
-  async function selectItemsInScene(resultIDs, updateNavigation = true) {
+  function selectItemsInScene(resultIDs, updateNavigation = true) {
     // NOTE: we might want to compare with previous selection to avoid unnecessary updates
-    if (!viewer) {
-      return
-    }
+    // if (!viewer) {
+    //   return
+    // }
     try {
-      await viewer.setSelection(0, resultIDs)
-      setSelectedElements(resultIDs.map((id) => `${id}`))
-      if (resultIDs.length > 0) {
+      // Update react component state,
+      // which in turn will update the store and other related states
+      setSelectedIdsInViewer(resultIDs)
+      // Update Navigation to the selected element
+      if (resultIDs.length > 0 && updateNavigation) {
         const lastId = resultIDs.slice(-1)
-        const props = await viewer.getProperties(0, Number(lastId))
-        setSelectedElement(props)
-        const pathIds = await onElementSelect(lastId)
-        if (updateNavigation) {
-          const repoFilePath = modelPath.gitpath ? modelPath.getRepoPath() : modelPath.filepath
-          const path = pathIds.join('/')
-          navigate(`${pathPrefix}${repoFilePath}/${path}`)
-        }
-      } else {
-        setSelectedElement(null)
+        const pathIds = calculatePathIds(lastId)
+        const repoFilePath = modelPath.gitpath ? modelPath.getRepoPath() : modelPath.filepath
+        const path = pathIds.join('/')
+        navigate(`${pathPrefix}${repoFilePath}/${path}`)
       }
     } catch (e) {
+      console.log('errorrrr', e)
       // IFCjs will throw a big stack trace if there is not a visual
       // element, e.g. for IfcSite, but we still want to proceed to
       // setup its properties.
@@ -396,27 +414,21 @@ export default function CadView({
     }
   }
 
-
   /**
-   * Select the items in the NavTree and update ItemProperties.
-   * Returns the ids of path parts from root to this elt in spatial
-   * structure.
+   * Calculates Path Ids for the elements
    *
    * @param {number} expressId
    * @return {Array} pathIds
    */
-  function onElementSelect(expressId) {
+  function calculatePathIds(expressId) {
     const lookupElt = elementsById[parseInt(expressId)]
     if (!lookupElt) {
       debug().error(`CadView#onElementSelect(${expressId}) missing in table:`, elementsById)
       return
     }
     const pathIds = computeElementPathIds(lookupElt, (elt) => elt.expressID)
-    setExpandedElements(pathIds.map((n) => `${n}`))
     return pathIds
   }
-
-
   /**
    * Extracts the path to the element from the url and selects the element
    *

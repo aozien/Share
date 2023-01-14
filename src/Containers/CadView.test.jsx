@@ -58,10 +58,13 @@ describe('CadView', () => {
     await waitFor(() => screen.getByTitle(/Bldrs: 1.0.0/i))
     await actAsyncFlush()
     const getPropsCalls = viewer.getProperties.mock.calls
+    const setSelectionCalls = viewer.setSelection.mock.calls
+    const expectedSelectionCalls = 3 //
     const numCallsExpected = 2 // First for root, second from URL path
+    expect(setSelectionCalls.length).toBe(expectedSelectionCalls)
     expect(getPropsCalls.length).toBe(numCallsExpected)
     expect(getPropsCalls[0][0]).toBe(0) // call 1, arg 1
-    expect(getPropsCalls[0][0]).toBe(0) // call 2, arg 2
+    expect(getPropsCalls[0][1]).toBe(0) // call 1, arg 2
     expect(getPropsCalls[1][0]).toBe(0) // call 2, arg 1
     expect(getPropsCalls[1][1]).toBe(targetEltId) // call 2, arg 2
     await actAsyncFlush()
@@ -91,6 +94,7 @@ describe('CadView', () => {
             modelPath={modelPath}
           />
         </ShareMock>)
+    await actAsyncFlush()
     expect(getByTitle('Section')).toBeInTheDocument()
     const clearSelection = getByTitle('Clear')
     act(() => {
@@ -98,7 +102,7 @@ describe('CadView', () => {
     })
     const callDeletePlanes = viewer.clipper.deleteAllPlanes.mock.calls
     expect(callDeletePlanes.length).toBe(1)
-    expect(result.current.selectedElements).toBe(null)
+    expect(result.current.selectedElements).toHaveLength(0)
     expect(result.current.selectedElement).toBe(null)
     expect(result.current.cutPlaneDirection).toBe(null)
     await actAsyncFlush()
