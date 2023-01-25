@@ -1,7 +1,6 @@
 import React, {useEffect} from 'react'
 import {Outlet, Route, Routes, useLocation, useNavigate} from 'react-router-dom'
-import {Auth0Provider, withAuthenticationRequired} from '@auth0/auth0-react'
-import {useAuth0} from '@auth0/auth0-react'
+import {Auth0Provider} from '@auth0/auth0-react'
 import * as Sentry from '@sentry/react'
 import ShareRoutes from './ShareRoutes'
 import debug from './utils/debug'
@@ -10,27 +9,6 @@ import debug from './utils/debug'
 const installPrefix = window.location.pathname.startsWith('/Share') ? '/Share' : ''
 const basePath = `${installPrefix }/`
 const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes)
-
-
-// The next two components from https://auth0.com/docs/quickstart/spa/react
-const ProtectedRoute = ({component, ...args}) => {
-  const Component = withAuthenticationRequired(component, args)
-  return <Component/>
-}
-
-
-const Auth0ProviderWithRedirectCallback = ({children, ...props}) => {
-  const navigate = useNavigate()
-  const onRedirectCallback = (appState) => {
-    navigate((appState && appState.returnTo) || window.location.pathname)
-  }
-  return (
-    <Auth0Provider onRedirectCallback={onRedirectCallback} {...props}>
-      {children}
-    </Auth0Provider>
-  )
-}
-
 
 /**
  * From URL design: https://github.com/bldrs-ai/Share/wiki/URL-Structure
@@ -60,19 +38,8 @@ export default function BaseRoutes({testElt = null}) {
     }
   }, [location, navigation])
 
-
-  const ShareRoutesCtx = () => {
-    return (
-      <ShareRoutes
-        installPrefix={installPrefix}
-        appPrefix={`${installPrefix }/share`}
-      />
-    )
-  }
-
-  const {isAuthenticated} = useAuth0()
   return (
-    <Auth0ProviderWithRedirectCallback
+    <Auth0Provider
       domain='bldrs.us.auth0.com'
       clientId='xojbbSyJ9n6HUdZwE7LUX7Zvff6ejxjv'
       authorizationParams={{
@@ -85,15 +52,14 @@ export default function BaseRoutes({testElt = null}) {
             path="share/*"
             element={
               testElt ||
-                isAuthenticated ? (
-                  <ProtectedRoute component={ShareRoutesCtx}/>
-                ) : (
-                  <ShareRoutesCtx/>
-                )
+              <ShareRoutes
+                installPrefix={installPrefix}
+                appPrefix={`${installPrefix }/share`}
+              />
             }
           />
         </Route>
       </SentryRoutes>
-    </Auth0ProviderWithRedirectCallback>
+    </Auth0Provider>
   )
 }
