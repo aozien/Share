@@ -45,6 +45,7 @@ export default function BaseRoutes({testElt = null}) {
       authorizationParams={{
         redirect_uri: window.location.origin,
       }}
+      cacheLocation="localstorage"
     >
       <SentryRoutes>
         <Route path={basePath} element={<Outlet/>}>
