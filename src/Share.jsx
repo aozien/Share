@@ -15,6 +15,7 @@ import AccountCircle from '@mui/icons-material/AccountCircle'
 import WidgetApi from "./WidgetApi/WidgetApi";
 import {searchIndex} from './Containers/CadView';
 /* eslint-enable */
+import FPSDisplayer from './Components/FPSDisplayer'
 
 
 /**
@@ -87,6 +88,7 @@ export default function Share({installPrefix, appPrefix, pathPrefix}) {
             pathPrefix={pathPrefix}
             modelPath={modelPath}
           />
+          <FPSDisplayer/>
         </ThemeProvider>
       </ColorModeContext.Provider>
     </CssBaseline>)

@@ -1,6 +1,6 @@
 {
   "name": "bldrs",
-  "version": "1.0.0-r649",
+  "version": "1.0.0-r616",
   "main": "src/index.jsx",
   "license": "MIT",
   "homepage": "https://github.com/bldrs-ai/Share",
@@ -40,6 +40,7 @@
     "clsx": "^1.2.1",
     "matrix-widget-api": "^1.1.1",
     "normalize.css": "^8.0.1",
+    "postprocessing": "^6.29.3",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
