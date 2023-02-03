@@ -1,54 +1,21 @@
 
 import {IfcViewerAPI} from 'web-ifc-viewer'
 import {Matrix4} from 'three'
-import {
-  BlendFunction,
-  EdgeDetectionMode,
-  EffectComposer,
-  EffectPass,
-  OutlineEffect,
-  SMAAEffect,
-  SMAAPreset,
-  RenderPass,
-} from 'postprocessing'
+
+import IfcHighlighter from './IfcHighLighter'
+
 
 /** Class IfcViewerAPIExtended*/
 export default class IfcViewerAPIExtended extends IfcViewerAPI {
   subsets = {}
+  highlighter = null
   // TODO: might be usefull if we used a Set as well to handle large selections,
   // but for now array is more performant for small numbers
   _selectedExpressIds = []
-  _outlineEffect = null
   /**  */
   constructor(options) {
     super(options)
-    const scene = this.context.getScene()
-    const camera = this.context.getCamera()
-    const renderer = this.context.getRenderer()
-
-    const composer = new EffectComposer(renderer)
-    composer.addPass(new RenderPass(scene, camera))
-
-    this._outlineEffect = new OutlineEffect(scene, camera, {
-      blendFunction: BlendFunction.SCREEN,
-      edgeStrength: 1.5,
-      pulseSpeed: 0.0,
-      // visibleEdgeColor: 0xff9b00,
-      visibleEdgeColor: 0xc7c7c7,
-      hiddenEdgeColor: 0xff9b00,
-      height: 480,
-      blur: false,
-      xRay: true,
-      opacity: 1,
-    })
-    const outlinePass = new EffectPass(camera, this._outlineEffect)
-    // The outline effect uses mask textures which produce aliasing artifacts.
-    composer.addPass(outlinePass)
-
-    requestAnimationFrame(function render() {
-      requestAnimationFrame(render)
-      composer.render()
-    })
+    this.highlighter = new IfcHighlighter(this.context)
   }
 
 
@@ -63,7 +30,6 @@ export default class IfcViewerAPIExtended extends IfcViewerAPI {
       return null
     }
     const mesh = found.object
-    this._outlineEffect.setSelection([mesh])
     if (found.faceIndex === undefined) {
       return null
     }
@@ -94,11 +60,13 @@ export default class IfcViewerAPIExtended extends IfcViewerAPI {
     if (this._selectedExpressIds.length !== 0) {
       try {
         await this.pickByID(modelID, this._selectedExpressIds, focusSelection, true)
+        this.highlighter.setHighlighted(this.IFC.selector.selection.meshes)
       } catch (e) {
         console.error(e)
       }
     } else {
       this.IFC.selector.unpickIfcItems()
+      this.highlighter.setHighlighted(null)
     }
   }
 
@@ -187,4 +155,14 @@ export default class IfcViewerAPIExtended extends IfcViewerAPI {
       await this.IFC.selector.selection.focusSelection(selected)
     }
   }
+}
+
+/** */
+function newUpdateFn(_delta) {
+  if (this.blocked || !GComposer) return
+  const scene = this.context.getScene()
+  const camera = this.context.getCamera()
+  GComposer.render()
+  // this.renderer.render(scene, camera)
+  // this.renderer2D.render(scene, camera)
 }
