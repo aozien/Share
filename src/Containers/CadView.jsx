@@ -281,7 +281,6 @@ export default function CadView({
   async function loadIfc(filepath) {
     debug().log(`CadView#loadIfc: `, filepath)
     const uploadedFile = pathPrefix.endsWith('new')
-
     if (uploadedFile) {
       filepath = getUploadedBlobPath(filepath)
       debug().log('CadView#loadIfc: parsed blob: ', filepath)
@@ -577,6 +576,10 @@ export default function CadView({
    */
   function updateLoadedFileInfo(uploadedFile, ifcUrl) {
     if (uploadedFile) {
+      // fetch file
+      fetch(ifcUrl).then(response=> response.text()).then(data=>{
+        setLoadedFileInfo({source: 'local', info: {data: data}})
+      }) 
       return
     }
     const githubRegex = /(raw.githubusercontent|github.com)/gi

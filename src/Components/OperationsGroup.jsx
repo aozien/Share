@@ -43,7 +43,7 @@ export default function OperationsGroup({deselectItems}) {
   const isCollaborationGroupVisible = useStore((state) => state.isCollaborationGroupVisible)
   const isModelInteractionGroupVisible = useStore((state) => state.isModelInteractionGroupVisible)
   const isSettingsVisible = useStore((state) => state.isSettingsVisible)
-  const isAppStoreEnabled = useExistInFeature('apps')
+  const isAppStoreEnabled = true// useExistInFeature('apps')
   const toggleIsHelpTooltips = useStore((state) => state.toggleIsHelpTooltips)
   const isHelpTooltips = useStore((state) => state.isHelpTooltips)
   const turnOffIsHelpTooltips = useStore((state) => state.turnOffIsHelpTooltips)
